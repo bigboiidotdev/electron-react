@@ -5,6 +5,20 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 export type Channels = 'ipc-example';
 
 const electronHandler = {
+  store: {
+    get(key: string) {
+      return ipcRenderer.sendSync('electron-store-get', key);
+    },
+    set(property: string, val: string) {
+      ipcRenderer.send('electron-store-set', property, val);
+    },
+    has(key: string) {
+      return ipcRenderer.sendSync('electron-store-has', key);
+    },
+    reset(key?: string) {
+      return ipcRenderer.send('electron-store-reset', key ?? 'all');
+    },
+  },
   ipcRenderer: {
     sendMessage(channel: Channels, ...args: unknown[]) {
       ipcRenderer.send(channel, ...args);

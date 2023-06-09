@@ -1,8 +1,23 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  MemoryRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from 'react-router-dom';
 import icon from '../../assets/icon.svg';
 import './App.css';
 
 function Hello() {
+  const navigate = useNavigate();
+
+  const addKey = () => window.electron.store.set('somehting', '1234');
+
+  const getKey = () => {
+    const key = window.electron.store.get('somehting');
+    // eslint-disable-next-line no-alert
+    alert(key);
+  };
+
   return (
     <div>
       <div className="Hello">
@@ -10,31 +25,35 @@ function Hello() {
       </div>
       <h1>electron-react-boilerplate</h1>
       <div className="Hello">
-        <a
-          href="https://electron-react-boilerplate.js.org/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              📚
-            </span>
-            Read our docs
-          </button>
-        </a>
-        <a
-          href="https://github.com/sponsors/electron-react-boilerplate"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="folded hands">
-              🙏
-            </span>
-            Donate
-          </button>
-        </a>
+        <button type="button" onClick={() => navigate('/authed')}>
+          <span role="img" aria-label="books">
+            📚
+          </span>
+          Go to authed page
+        </button>
+        <button type="button" onClick={addKey}>
+          Add Key
+        </button>
+        <button type="button" onClick={getKey}>
+          Get Key
+        </button>
       </div>
+    </div>
+  );
+}
+
+function AuthedPage() {
+  const navigate = useNavigate();
+
+  return (
+    <div>
+      <div>Hello</div>
+      <button type="button" onClick={() => navigate('/')}>
+        <span role="img" aria-label="books">
+          📚
+        </span>
+        Back
+      </button>
     </div>
   );
 }
@@ -44,6 +63,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Hello />} />
+        <Route path="/authed" element={<AuthedPage />} />
       </Routes>
     </Router>
   );
