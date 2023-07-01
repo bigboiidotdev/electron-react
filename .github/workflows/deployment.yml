@@ -5,15 +5,15 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [windows-2019]
+    runs-on: windows-2019
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Get Latest Release Tag
+        id: get-latest-tag
+        run: echo "{latest_tag}::{git describe --abbrev=0 --tags}" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -33,15 +33,20 @@ jobs:
       - name: Get Release Description
         id: get-release-description
         run: |
-          echo "::set-output name=release_description::$(curl -s -H \"Accept: application/vnd.github.v3+json\" \
-            https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.body')"
+          echo "{description}::{git show -s --format=%b ${GITHUB_REF}}"
 
-      - name: Send to Discord
-        uses: appleboy/discord-action@master
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          message: |
-            New release available! Download the latest .exe file:
-            Release Description: ${{ steps.get-release-description.outputs.release_description }}
-          file_paths: ${{ steps.get-exe.outputs.exe_path }}
+      - name: Print
+        run: |
+          echo "file: ${{ steps.get-exe.outputs.exe_path }}"
+          echo "Release Tag: ${{ steps.get-latest-tag.outputs.latest_tag }}"
+          echo "Release Description: ${{ steps.get-release-description.outputs.description }}"
+
+      # - name: Send to Discord
+      #   uses: appleboy/discord-action@master
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      #   with:
+      #     message: |
+      #       New release available! Download the latest .exe file:
+      #       Release Description: ${{ steps.get-release-description.outputs.release_description }}
+      #     file_paths: ${{ steps.get-exe.outputs.exe_path }}
