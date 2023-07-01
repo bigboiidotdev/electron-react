@@ -13,7 +13,7 @@ jobs:
 
       - name: Get Latest Release Tag
         id: get-latest-tag
-        run: echo "::set-env name=TAG_TITLE::$(git describe --abbrev=0 --tags)"
+        run: echo "::set-output name=TAG_TITLE::$(git describe --abbrev=0 --tags)"
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -28,17 +28,17 @@ jobs:
 
       - name: Get Release .exe
         id: get-exe
-        run: echo "::set-env name=EXE_PATH::$(find . -type f -name '*.exe' | grep 'ElectronReact Setup.*\.exe')"
+        run: echo "::set-output name=EXE_PATH::$(find . -type f -name '*.exe' | grep 'ElectronReact Setup.*\.exe')"
 
       - name: Get Release Description
         id: get-release-description
-        run: echo "::set-env name=DESCRIPTION::$(git show -s --format=%b ${GITHUB_REF})"
+        run: echo "::set-output name=DESCRIPTION::$(git show -s --format=%b ${GITHUB_REF})"
 
       - name: Print
         run: |
-          echo "file: ${{ env.EXE_PATH }}"
-          echo "Release Tag: ${{ env.TAG_TITLE }}"
-          echo "Release Description: ${{ env.DESCRIPTION }}"
+          echo "file: ${{ steps.get-exe.outputs.EXE_PATH }}"
+          echo "Release Tag: ${{ steps.get-latest-tag.outputs.TAG_TITLE }}"
+          echo "Release Description: ${{ steps.get-release-description.outputs.DESCRIPTION }}"
 
       # - name: Send to Discord
       #   uses: appleboy/discord-action@master
