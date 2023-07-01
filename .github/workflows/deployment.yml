@@ -1,8 +1,9 @@
 name: Build and Send to Discord
 
 on:
-  merge:
-    branch: main
+  push:
+    branches:
+      - main
 
 jobs:
   build:
