@@ -1,0 +1,48 @@
+name: Build and Send to Discord
+
+on:
+  release:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-10.14, windows-2019, ubuntu-18.04]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run package
+
+      - name: Get Release .exe
+        id: get-exe
+        run: |
+          echo "::set-output name=exe_path::$(find ./release -name '*.exe' -type f | head -n 1)"
+
+      - name: Get Release Description
+        id: get-release-description
+        run: |
+          echo "::set-output name=release_description::$(curl -s -H \"Accept: application/vnd.github.v3+json\" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.body')"
+
+      - name: Send to Discord
+        uses: mr-smithers-excellent/send-discord-message@v1
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          message: |
+            New release available! Download the latest .exe file:
+            Release Description: ${{ steps.get-release-description.outputs.release_description }}
+          file_paths: ${{ steps.get-exe.outputs.exe_path }}
