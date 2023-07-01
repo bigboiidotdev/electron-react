@@ -28,24 +28,29 @@ jobs:
         run: |
           7z a -r release/build.zip release/build
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-builds
-          path: release/build.zip
-
-  notify-discord:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download release builds
-        uses: actions/download-artifact@v2
-        with:
-          name: release-builds
-          path: release/build.zip
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: release-builds
+      #     path: release/build.zip
 
       - name: Send release build to Discord
         run: |
           export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
           curl -X POST -H "Content-Type: multipart/form-data" -F "file=@release/build.zip" $WEBHOOK_URL
+
+  # notify-discord:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Download release builds
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: release-builds
+  #         path: release/build.zip
+
+  #     - name: Send release build to Discord
+  #       run: |
+  #         export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
+  #         curl -X POST -H "Content-Type: multipart/form-data" -F "file=@release/build.zip" $WEBHOOK_URL
