@@ -5,11 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [macos-10.14, windows-2019, ubuntu-18.04]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -23,13 +19,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
-        run: npm run package
+      - name: Build (Win)
+        run: npm run package -- --win
 
       - name: Get Release .exe
         id: get-exe
         run: |
-          echo "::set-output name=exe_path::$(find ./release -name '*.exe' -type f | head -n 1)"
+          echo "::set-output name=exe_path::$(find ./release/build -name '*.exe' -type f | head -n 1)"
 
       - name: Get Release Description
         id: get-release-description
