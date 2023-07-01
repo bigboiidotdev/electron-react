@@ -2,10 +2,12 @@ name: Build and Send to Discord
 
 on:
   release:
+    types:
+      - published
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -28,11 +30,11 @@ jobs:
 
       - name: Get Release .exe
         id: get-exe
-        run: echo "EXE_PATH=$(find . -type f -name 'ElectronReact Setup*.exe')" >> $GITHUB_OUTPUT
+        run: echo "EXE_PATH=$(Get-ChildItem -Path . -Filter "ElectronReact Setup*.exe" -Recurse)" >> $GITHUB_OUTPUT
 
       - name: Get Release Description
         id: get-release-description
-        run: echo "DESCRIPTION=$(git show -s --format=%b ${GITHUB_REF})" >> $GITHUB_OUTPUT
+        run: echo "DESCRIPTION=$(git show -s --format="%b" $env:GITHUB_REF)" >> $GITHUB_OUTPUT
 
       - name: Print
         run: |
