@@ -41,6 +41,11 @@ jobs:
           name: release-builds
           path: release/build
 
+      - name: Print
+        run: |
+          cd release/build
+          dir
+
       - name: Send release build to Discord
         run: |
           export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
