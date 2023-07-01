@@ -24,11 +24,15 @@ jobs:
       - name: Build Electron app
         run: npm run package -- --win
 
+    - name: Compress release builds
+        run: |
+          7z a -r release/build.zip release/build
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: release-builds
-          path: release/build
+          path: release/build.zip
 
   notify-discord:
     needs: build
@@ -39,11 +43,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: release-builds
-          path: release/build
+          path: release/build.zip
 
       - name: Send release build to Discord
         run: |
           export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
-          for file in release/build/*Setup*.exe; do
-            curl -X POST -H "Content-Type: multipart/form-data" -F "file=@$file" $WEBHOOK_URL
-          done
+          curl -X POST -H "Content-Type: multipart/form-data" -F "file=@release/build.zip" $WEBHOOK_URL
