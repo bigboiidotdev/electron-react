@@ -40,13 +40,9 @@ jobs:
         with:
           name: release-builds
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-
-      - name: Install discord-webhook-cli
-        run: npm install -g discord-webhook-cli
-
       - name: Send release build to Discord
-        run: discord-webhook send --url ${{ secrets.DISCORD_WEBHOOK_URL }} --message "New release build" --file release/build/ElectronReact Setup*.exe
+        run: |
+          export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
+          for file in release/build/*.exe; do
+            curl -X POST -H "Content-Type: multipart/form-data" -F "file=@$file" $WEBHOOK_URL
+          done
