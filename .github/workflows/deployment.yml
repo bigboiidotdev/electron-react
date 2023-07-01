@@ -24,7 +24,7 @@ jobs:
       - name: Build Electron app
         run: npm run package -- --win
 
-    - name: Compress release builds
+      - name: Compress release builds
         run: |
           7z a -r release/build.zip release/build
 
