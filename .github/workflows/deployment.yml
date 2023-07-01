@@ -30,7 +30,10 @@ jobs:
 
       - name: Get Release .exe
         id: get-exe
-        run: echo "EXE_PATH=${{ github.workspace }}\release\build\*.exe" >> $GITHUB_OUTPUT
+        run: |
+          mkdir ${{ github.workspace }}\.github_output
+          copy /Y ${{ github.workspace }}\release\build\ElectronReact Setup*.exe ${{ github.workspace }}/.github_output/
+          echo "::set-output name=EXE_PATH::${{ github.workspace }}/.github_output"
 
       # - name: Get Release Description
       #   id: get-release-description
