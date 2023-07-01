@@ -30,7 +30,10 @@ jobs:
 
       - name: Get Release .exe
         id: get-exe
-        run: echo "EXE_PATH=$(Get-ChildItem -Path . -Filter "ElectronReact Setup*.exe" -Recurse)" >> $GITHUB_OUTPUT
+        run: |
+          mkdir ${{ github.workspace }}/.github_output
+          copy /Y ${{ github.workspace }}/release/build/*.exe ${{ github.workspace }}/.github_output/
+          echo "EXE_PATH=${{ github.workspace }}/.github_output" >> $GITHUB_OUTPUT
 
       - name: Get Release Description
         id: get-release-description
