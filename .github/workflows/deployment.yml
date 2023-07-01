@@ -36,8 +36,7 @@ jobs:
 
       - name: Send release build to Discord
         run: |
-          export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
-          curl -X POST -H "Content-Type: multipart/form-data" -F "file=@release/build.zip" $WEBHOOK_URL
+          curl -X POST -H "Content-Type: multipart/form-data" -F "file=@release/build.zip" ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   # notify-discord:
   #   needs: build
