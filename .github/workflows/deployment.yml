@@ -32,7 +32,7 @@ jobs:
         id: get-exe
         run: |
           mkdir ${{ github.workspace }}\.github_output
-          dir ${{ github.workspace }}\release\build /b /s *.exe > output.txt
+          dir ${{ github.workspace }}\release\build /b *.exe > output.txt
           set /p FILE_PATH=<output.txt
           copy /Y "%FILE_PATH%" ${{ github.workspace }}\.github_output\
           echo "::set-output name=EXE_PATH::${{ github.workspace }}\.github_output"
