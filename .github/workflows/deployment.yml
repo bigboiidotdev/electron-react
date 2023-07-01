@@ -2,6 +2,7 @@ name: Build and Send to Discord
 
 on:
   merge:
+    branch: main
 
 jobs:
   build:
