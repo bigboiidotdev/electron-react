@@ -1,4 +1,4 @@
-name: Build and Send to Discord
+name: Deployment
 
 on:
   push:
@@ -10,47 +10,43 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
-
-      # - name: Get Latest Release Tag
-      #   id: get-latest-tag
-      #   run: echo "TAG_TITLE=$(git describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18'
+          node-version: 14
 
       - name: Install dependencies
-        run: npm install
+        run: npm i
 
-      - name: Build (Win)
+      - name: Build Electron app
         run: npm run package -- --win
 
-      - name: Get Release .exe
-        id: get-exe
-        run: |
-          mkdir ${{ github.workspace }}\.github_output
-          dir ${{ github.workspace }}\release\build /b *.exe > output.txt
-          set /p FILE_PATH=<output.txt
-          copy /Y "%FILE_PATH%" ${{ github.workspace }}\.github_output\
-          echo "::set-output name=EXE_PATH::${{ github.workspace }}\.github_output"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-builds
+          path: release/build
 
-      # - name: Get Release Description
-      #   id: get-release-description
-      #   run: echo "DESCRIPTION=$(git show -s --format="%b" $env:GITHUB_REF)" >> $GITHUB_OUTPUT
+  notify-discord:
+    needs: build
+    runs-on: ubuntu-latest
 
-      - name: Print
-        run: |
-          echo "file: ${{ steps.get-exe.outputs.EXE_PATH }}"
+    steps:
+      - name: Download release builds
+        uses: actions/download-artifact@v2
+        with:
+          name: release-builds
 
-      # - name: Send to Discord
-      #   uses: appleboy/discord-action@master
-      #   env:
-      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      #   with:
-      #     message: |
-      #       New release available! Download the latest .exe file:
-      #       Release Description: ${{ steps.get-release-description.outputs.release_description }}
-      #     file_paths: ${{ steps.get-exe.outputs.exe_path }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install discord-webhook-cli
+        run: npm install -g discord-webhook-cli
+
+      - name: Send release build to Discord
+        run: discord-webhook send --url ${{ secrets.DISCORD_WEBHOOK_URL }} --message "New release build" --file release/build/ElectronReact Setup*.exe
