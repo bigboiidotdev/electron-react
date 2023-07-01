@@ -13,7 +13,7 @@ jobs:
 
       - name: Get Latest Release Tag
         id: get-latest-tag
-        run: echo "::set-output name=TAG_TITLE::$(git describe --abbrev=0 --tags)"
+        run: echo "TAG_TITLE=$(git describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -28,11 +28,11 @@ jobs:
 
       - name: Get Release .exe
         id: get-exe
-        run: echo "::set-output name=EXE_PATH::$(find . -type f -name '*.exe' | grep 'ElectronReact Setup.*\.exe')"
+        run: echo "EXE_PATH=$(find . -type f -name 'ElectronReact Setup*.exe')" >> $GITHUB_OUTPUT
 
       - name: Get Release Description
         id: get-release-description
-        run: echo "::set-output name=DESCRIPTION::$(git show -s --format=%b ${GITHUB_REF})"
+        run: echo "DESCRIPTION=$(git show -s --format=%b ${GITHUB_REF})" >> $GITHUB_OUTPUT
 
       - name: Print
         run: |
