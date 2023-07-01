@@ -1,9 +1,7 @@
 name: Build and Send to Discord
 
 on:
-  release:
-    types:
-      - published
+  merge:
 
 jobs:
   build:
