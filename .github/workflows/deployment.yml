@@ -13,7 +13,7 @@ jobs:
 
       - name: Get Latest Release Tag
         id: get-latest-tag
-        run: echo "{latest_tag}::{git describe --abbrev=0 --tags}" >> $GITHUB_OUTPUT
+        run: echo "{latest_tag}={git describe --abbrev=0 --tags}" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -33,7 +33,7 @@ jobs:
       - name: Get Release Description
         id: get-release-description
         run: |
-          echo "{description}::{git show -s --format=%b ${GITHUB_REF}}"
+          echo "{description}={git show -s --format=%b ${GITHUB_REF}}" >> $GITHUB_OUTPUT
 
       - name: Print
         run: |
