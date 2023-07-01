@@ -1,9 +1,8 @@
 name: Build and Send to Discord
 
 on:
-  release:
-    types:
-      - published
+  merge:
+    branch: main
 
 jobs:
   build:
@@ -30,10 +29,7 @@ jobs:
 
       - name: Get Release .exe
         id: get-exe
-        run: |
-          mkdir ${{ github.workspace }}/.github_output
-          copy /Y ${{ github.workspace }}/release/build/*.exe ${{ github.workspace }}/.github_output/
-          echo "EXE_PATH=${{ github.workspace }}/.github_output" >> $GITHUB_OUTPUT
+        run: echo "EXE_PATH=${{ github.workspace }}\release\build\*.exe" >> $GITHUB_OUTPUT
 
       - name: Get Release Description
         id: get-release-description
