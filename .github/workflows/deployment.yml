@@ -32,8 +32,7 @@ jobs:
         id: get-exe
         run: |
           mkdir ${{ github.workspace }}\.github_output
-          copy /Y ${{ github.workspace }}\release\build\*.exe ${{ github.workspace }}/.github_output/
-          echo "::set-output name=EXE_PATH::${{ github.workspace }}/.github_output"
+          copy /Y ${{ github.workspace }}\release\build\*.exe ${{ github.workspace }}\.github_output\
 
       # - name: Get Release Description
       #   id: get-release-description
