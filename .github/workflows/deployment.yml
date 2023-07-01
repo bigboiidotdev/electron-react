@@ -26,7 +26,7 @@ jobs:
 
       - name: Compress release builds
         run: |
-          7z a -r release/build.zip release/build
+          7z a -r release/build.zip release/build/*Setup*.exe
 
       # - name: Upload artifacts
       #   uses: actions/upload-artifact@v2
