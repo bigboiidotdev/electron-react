@@ -41,14 +41,9 @@ jobs:
           name: release-builds
           path: release/build
 
-      - name: Print
-        run: |
-          cd release/build
-          dir
-
       - name: Send release build to Discord
         run: |
           export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
-          for file in release/build/Setup*.exe; do
+          for file in release/build/*Setup*.exe; do
             curl -X POST -H "Content-Type: multipart/form-data" -F "file=@$file" $WEBHOOK_URL
           done
