@@ -87,6 +87,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ needs.increment_version.outputs.new_version }}
           name: Release v${{ needs.increment_version.outputs.new_version }}
-          files: |
-            ./release/build/*Setup*.exe
+          files: release/build
 
