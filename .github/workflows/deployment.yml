@@ -41,7 +41,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -a -m "Bump version [skip ci]"
+          git commit -a -m "Release v${{ steps.increment_version.outputs.new_version }} [skip ci]"
           git push
 
 
@@ -94,7 +94,7 @@ jobs:
         id: create_release
         run: |
           echo "V: v${{ steps.read_yml_version.outputs.version }}"
-          RESPONSE=$(curl -L \
+          echo "response=$(curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
             -H "X-GitHub-Api-Version: 2022-11-28"\
@@ -105,9 +105,7 @@ jobs:
             "draft": false,
             "prerelease": false,
             "generate_release_notes":true
-          }')
-          echo "Response: $RESPONSE"
-          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
+          }')" >> $GITHUB_OUTPUT
 
       - name: Upload release assets
         id: upload_assets
