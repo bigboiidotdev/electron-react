@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  bump-version-and-build:
     runs-on: windows-latest
 
     steps:
@@ -18,8 +18,6 @@ jobs:
         with:
           node-version: 14
 
-      # bump version ============================
-
       - name: Read version of package.json
         id: read_version
         run: |
@@ -28,17 +26,17 @@ jobs:
       - name: Increment version
         id: increment_version
         run: |
-          VERSION=$(echo "${{ steps.read_version.outputs.version }}")
-          MAJOR=$(echo "$VERSION" | cut -d. -f1)
-          MINOR=$(echo "$VERSION" | cut -d. -f2)
-          PATCH=$(echo "$VERSION" | cut -d. -f3)
-          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          $VERSION = $(echo "${{ steps.read_version.outputs.version }}")
+          $MAJOR = $(echo "$VERSION" | ForEach-Object { $_ -split '\.' } | Select-Object -Index 0)
+          $MINOR = $(echo "$VERSION" | ForEach-Object { $_ -split '\.' } | Select-Object -Index 1)
+          $PATCH = $(echo "$VERSION" | ForEach-Object { $_ -split '\.' } | Select-Object -Index 2)
+          $NEW_VERSION = "$MAJOR.$MINOR.$($PATCH + 1)"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update package.json & package-lock.json
         run: |
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" release/app/package.json
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" release/app/package-lock.json
+          (Get-Content .\release\app\package.json) -replace '\"version\": \".*\"', "\"version\": \"${{ steps.increment_version.outputs.new_version }}\"" | Set-Content .\release\app\package.json
+          (Get-Content .\release\app\package-lock.json) -replace '\"version\": \".*\"', "\"version\": \"${{ steps.increment_version.outputs.new_version }}\"" | Set-Content .\release\app\package-lock.json
 
       - name: Commit and push changes
         run: |
@@ -46,8 +44,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git commit -a -m "Release v${{ steps.increment_version.outputs.new_version }} [skip ci]"
           git push
-
-      # build and package ============================
 
       - name: Install dependencies
         run: npm i
@@ -58,11 +54,11 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: release
-          path: release
+          name: release-build-win
+          path: release/build
 
   create-release:
-    needs: build
+    needs: [bump-version-and-build]
     runs-on: ubuntu-latest
 
     steps:
@@ -72,50 +68,33 @@ jobs:
       - name: Download release builds
         uses: actions/download-artifact@v2
         with:
-          name: release
-          path: release-latest
+          name: release-builds
+          path: release/build-win
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-
-      - name: Read version of package.json
-        id: release_version
+      - name: Get the latest version from latest.yml
+        id: read_yml_version
         run: |
-          echo "new_version=$(node -p "require('./release-latest/build/app/package.json').version")" >> $GITHUB_OUTPUT
-
-      # - name: Compress builds
-      #   run: |
-      #     7z a -r release/build.zip release/build-latest
+          VERSION=$(cat ./release/build-win/latest.yml | yq r - version)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create release
         id: create_release
         run: |
-          echo "response=$(curl -L \
+          echo "V: v${{ steps.read_yml_version.outputs.version }}"
+          RESPONSE=$(curl -L \
             -X POST \
-            -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
             -H "X-GitHub-Api-Version: 2022-11-28"\
             https://api.github.com/repos/amirfakhrullah/electron-react/releases \
             -d '{
-            "tag_name": "v${{ steps.release_version.outputs.new_version }}",
-            "name": "Release v${{ steps.release_version.outputs.new_version }}",
+            "tag_name": "v${{ steps.read_yml_version.outputs.version }}",
+            "name": "Release v${{ steps.read_yml_version.outputs.version }}",
             "draft": false,
             "prerelease": false,
             "generate_release_notes":true
-          }')" >> $GITHUB_OUTPUT
-
-      # - name: Upload builds to the release
-      #   run: |
-      #     curl -L \
-      #     -X POST \
-      #     -H "Accept: application/vnd.github+json" \
-      #     -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
-      #     -H "X-GitHub-Api-Version: 2022-11-28" \
-      #     -H "Content-Type: application/zip" \
-      #     https://uploads.github.com/repos/amirfakhrullah/electron-react/releases/${{ steps.create_release.outputs.release_id }}/assets?name=build.zip \
-      #     --data-binary "@release/build.zip"
+          }')
+          echo "Response: $RESPONSE"
+          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
 
       - name: Upload release assets
         id: upload_assets
@@ -123,7 +102,7 @@ jobs:
           RESPONSE=${{ steps.create_release.outputs.response }}
           RELEASE_ID=$(echo $RESPONSE | jq -r '.id')
           UPLOAD_URL=$(echo $RESPONSE | jq -r '.upload_url' | sed -e "s/{?name,label}//")
-          ASSET_PATH="release-latest/build/*Source*.exe"
+          ASSET_PATH="build/*Source*.exe"
           for file in $ASSET_PATH; do
             echo "Uploading $file..."
             curl -L \
