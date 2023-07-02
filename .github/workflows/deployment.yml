@@ -18,6 +18,9 @@ jobs:
         with:
           node-version: 14
 
+      - name: Navigate to release/app directory
+        run: cd release/app
+
       - name: Update version
         run: |
           npm install --global npm-version-up
