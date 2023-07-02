@@ -6,49 +6,46 @@ on:
       - main
 
 jobs:
-  # increment-version:
-  #   runs-on: ubuntu-latest
+  increment-version:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v2
-  #       with:
-  #         node-version: 14
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
 
-  #     - name: Navigate to release/app directory
-  #       run: cd release/app
+      - name: Read package.json
+        id: read_package_json
+        run: |
+          echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
 
-  #     - name: Read package.json
-  #       id: read_package_json
-  #       run: |
-  #         echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Increment version
+        id: increment_version
+        run: |
+          VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-  #     - name: Increment version
-  #       id: increment_version
-  #       run: |
-  #         VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
-  #         MAJOR=$(echo "$VERSION" | cut -d. -f1)
-  #         MINOR=$(echo "$VERSION" | cut -d. -f2)
-  #         PATCH=$(echo "$VERSION" | cut -d. -f3)
-  #         NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-  #         echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Update package.json
+        run: |
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" release/app/package.json
 
-  #     - name: Update package.json
-  #       run: |
-  #         sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" package.json
-
-  #     - name: Commit and push changes
-  #       run: |
-  #         git config --local user.email "action@github.com"
-  #         git config --local user.name "GitHub Action"
-  #         git commit -a -m "Bump version [skip ci]"
-  #         git push
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -a -m "Bump version [skip ci]"
+          git push
 
   build-and-package:
-    # needs: increment-version
+    needs: increment-version
     runs-on: windows-latest
 
     steps:
@@ -85,20 +82,11 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: actions/create-release@v1
+        uses: meeDamian/github-release@2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
+          tag_name: v${{ needs.increment_version.outputs.new_version }}
+          release_name: Release v${{ needs.increment_version.outputs.new_version }}
+          files: release-win-v${{ needs.increment_version.outputs.new_version }}: release/build/
 
-      - name: Upload release asset
-        id: upload_asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/build
-          asset_name: release-win
-          asset_content_type: application/octet-stream
