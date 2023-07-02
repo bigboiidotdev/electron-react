@@ -6,7 +6,32 @@ on:
       - main
 
 jobs:
+  increment-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Navigate to release/app directory
+        run: cd release/app
+
+      - name: Update version
+        run: |
+          npm install --global npm-version-up
+          npm-version-up
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -a -m "Bump version [skip ci]"
+          git push
+
   build-and-package:
+    needs: increment-version
     runs-on: windows-latest
 
     steps:
@@ -23,12 +48,6 @@ jobs:
 
       - name: Build Electron app
         run: npm run package -- --win
-
-      - name: List .exe files
-        id: list_files
-        run: |
-          cd release/build
-          dir /B /S *.exe > ../exe_files.txt
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
