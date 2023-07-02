@@ -87,7 +87,7 @@ jobs:
       - name: Get the latest version from latest.yml
         id: read_yml_version
         run: |
-          VERSION=$(cat ./release/build/latest.yml | yq r - version)
+          VERSION=$(yq eval '.version' ./release/build/latest.yml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create release
