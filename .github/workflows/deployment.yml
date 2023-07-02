@@ -117,12 +117,17 @@ jobs:
         run: |
           FILE_PATH=$(find ./release/build -name "*Setup*.exe" | head -n 1)
           FILE_NAME=$(basename "$FILE_PATH")
+          echo "filenamae = $FILE_NAME"
+          NEW_FILE_NAME="ElectronReactV${{ steps.read_yml_version.outputs.version }}.exe"
+          NEW_FILE_PATH="./release/build/$NEW_FILE_NAME"
+          mv "$FILE_PATH" "$NEW_FILE_PATH"
+          echo "new filenamae = $NEW_FILE_NAME"
           curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/zip" \
-            --data-binary "@$FILE_PATH" \
-            "${{ steps.create_release.outputs.upload_url }}?name=$FILE_NAME"
+            --data-binary "@$NEW_FILE_PATH" \
+            "${{ steps.create_release.outputs.upload_url }}?name=$NEW_FILE_NAME"
 
 
 
