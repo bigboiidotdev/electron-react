@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-package:
     runs-on: windows-latest
 
     steps:
@@ -24,13 +24,19 @@ jobs:
       - name: Build Electron app
         run: npm run package -- --win
 
+      - name: List .exe files
+        id: list_files
+        run: |
+          cd release/build
+          dir /B /S *.exe > ../exe_files.txt
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: release-builds
-          path: release/build/*Source*.exe
+          path: release/build
 
-  notify-discord:
+  create-release:
     needs: build
     runs-on: ubuntu-latest
 
@@ -41,11 +47,22 @@ jobs:
           name: release-builds
           path: release/build
 
-      - name: Compress release builds
-        run: |
-          7z a -r release/build.zip release/build/*Setup*.exe
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
 
-      - name: Send release build to Discord
-        run: |
-          export WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
-          curl -X POST -H "Content-Type: multipart/form-data" -F "file=@release/build.zip" $WEBHOOK_URL
+      - name: Upload release asset
+        id: upload_asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/build
+          asset_name: release-win
+          asset_content_type: application/octet-stream
