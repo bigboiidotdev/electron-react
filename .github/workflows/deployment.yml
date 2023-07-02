@@ -18,16 +18,15 @@ jobs:
         with:
           node-version: 14
 
-      # - name: Read package.json
-      #   id: read_package_json
-      #   run: |
-      #     echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
-          # VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
+      - name: Read package.json
+        id: read_package_json
+        run: |
+          echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Increment version
         id: increment_version
         run: |
-          VERSION=${{ github.ref }}
+          VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MINOR=$(echo "$VERSION" | cut -d. -f2)
           PATCH=$(echo "$VERSION" | cut -d. -f3)
