@@ -46,7 +46,7 @@ jobs:
           git push
 
 
-  build-and-package:
+  build-win:
     needs: increment-version
     runs-on: windows-latest
 
@@ -72,7 +72,7 @@ jobs:
           path: release/build
 
   create-release:
-    needs: build-and-package
+    needs: build-win
     runs-on: ubuntu-latest
 
     steps:
@@ -90,9 +90,6 @@ jobs:
         run: |
           VERSION=$(yq eval '.version' ./release/build/latest.yml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Compress build folder
-        run: zip -r build.zip release/build
 
       - name: Create release
         id: create_release
@@ -117,11 +114,9 @@ jobs:
         run: |
           FILE_PATH=$(find ./release/build -name "*Setup*.exe" | head -n 1)
           FILE_NAME=$(basename "$FILE_PATH")
-          echo "filenamae = $FILE_NAME"
-          NEW_FILE_NAME="ElectronReactV${{ steps.read_yml_version.outputs.version }}.exe"
+          NEW_FILE_NAME="ElectronReact-{{ steps.read_yml_version.outputs.version }}-win.exe"
           NEW_FILE_PATH="./release/build/$NEW_FILE_NAME"
           mv "$FILE_PATH" "$NEW_FILE_PATH"
-          echo "new filenamae = $NEW_FILE_NAME"
           curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
