@@ -37,7 +37,7 @@ jobs:
           path: release/build
 
   create-release:
-    needs: build
+    needs: build-and-package
     runs-on: ubuntu-latest
 
     steps:
