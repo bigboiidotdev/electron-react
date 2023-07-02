@@ -81,13 +81,13 @@ jobs:
       - name: Download release builds
         uses: actions/download-artifact@v2
         with:
-          name: release-builds
-          path: release/build-win
+          name: release-build-win
+          path: release/build
 
       - name: Get the latest version from latest.yml
         id: read_yml_version
         run: |
-          VERSION=$(cat ./release/build-win/latest.yml | yq r - version)
+          VERSION=$(cat ./release/build/latest.yml | yq r - version)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create release
@@ -115,7 +115,7 @@ jobs:
           RESPONSE=${{ steps.create_release.outputs.response }}
           RELEASE_ID=$(echo $RESPONSE | jq -r '.id')
           UPLOAD_URL=$(echo $RESPONSE | jq -r '.upload_url' | sed -e "s/{?name,label}//")
-          ASSET_PATH="release/build-win/*Source*.exe"
+          ASSET_PATH="release/build/*Source*.exe"
           for file in $ASSET_PATH; do
             echo "Uploading $file..."
             curl -L \
