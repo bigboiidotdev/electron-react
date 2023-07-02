@@ -75,11 +75,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download release builds
-        uses: actions/download-artifact@v2
-        with:
-          name: release-builds
-          path: release/build
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -90,6 +87,12 @@ jobs:
         id: release_version
         run: |
           echo "new_version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Download release builds
+        uses: actions/download-artifact@v2
+        with:
+          name: release-builds
+          path: release/build
 
       - name: Create release
         id: create_release
