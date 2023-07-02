@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  bump-version-and-build:
-    runs-on: windows-latest
+  increment-version:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -18,32 +18,45 @@ jobs:
         with:
           node-version: 14
 
-      - name: Read version of package.json
-        id: read_version
+      - name: Read package.json
+        id: read_package_json
         run: |
           echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Increment version
         id: increment_version
         run: |
-          $VERSION = $(echo "${{ steps.read_version.outputs.version }}")
-          $MAJOR = $(echo "$VERSION" | ForEach-Object { $_ -split '\.' } | Select-Object -Index 0)
-          $MINOR = $(echo "$VERSION" | ForEach-Object { $_ -split '\.' } | Select-Object -Index 1)
-          $PATCH = $(echo "$VERSION" | ForEach-Object { $_ -split '\.' } | Select-Object -Index 2)
-          $NEW_VERSION = "$MAJOR.$MINOR.$($PATCH + 1)"
+          VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update package.json & package-lock.json
+      - name: Update package.json
         run: |
-          (Get-Content .\release\app\package.json) -replace '\"version\": \".*\"', "\"version\": \"${{ steps.increment_version.outputs.new_version }}\"" | Set-Content .\release\app\package.json
-          (Get-Content .\release\app\package-lock.json) -replace '\"version\": \".*\"', "\"version\": \"${{ steps.increment_version.outputs.new_version }}\"" | Set-Content .\release\app\package-lock.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" release/app/package.json
 
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -a -m "Release v${{ steps.increment_version.outputs.new_version }} [skip ci]"
+          git commit -a -m "Bump version [skip ci]"
           git push
+
+
+  build-and-package:
+    needs: increment-version
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get latest
+        run: |
+          git pull
+          git merge main
 
       - name: Install dependencies
         run: npm i
@@ -58,7 +71,7 @@ jobs:
           path: release/build
 
   create-release:
-    needs: [bump-version-and-build]
+    needs: build-and-package
     runs-on: ubuntu-latest
 
     steps:
@@ -102,7 +115,7 @@ jobs:
           RESPONSE=${{ steps.create_release.outputs.response }}
           RELEASE_ID=$(echo $RESPONSE | jq -r '.id')
           UPLOAD_URL=$(echo $RESPONSE | jq -r '.upload_url' | sed -e "s/{?name,label}//")
-          ASSET_PATH="build/*Source*.exe"
+          ASSET_PATH="release/build-win/*Source*.exe"
           for file in $ASSET_PATH; do
             echo "Uploading $file..."
             curl -L \
