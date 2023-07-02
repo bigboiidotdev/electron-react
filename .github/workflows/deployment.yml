@@ -112,7 +112,7 @@ jobs:
       - name: Upload release assets
         id: upload_assets
         run: |
-          ASSET_PATH="release/build/*Source*.exe"
+          ASSET_PATH="release/build/*"
           for file in $ASSET_PATH; do
             echo "Uploading $file..."
             curl -L \
