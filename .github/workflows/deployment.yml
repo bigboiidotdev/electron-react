@@ -18,31 +18,31 @@ jobs:
         with:
           node-version: 14
 
-      - name: Read package.json
-        id: read_package_json
+      - name: Read version of package.json
+        id: read_version
         run: |
           echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Increment version
         id: increment_version
         run: |
-          VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
+          VERSION=$(echo "${{ steps.read_version.outputs.version }}")
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MINOR=$(echo "$VERSION" | cut -d. -f2)
           PATCH=$(echo "$VERSION" | cut -d. -f3)
           NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update package.json & package-lock.json
         run: |
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ env.new_version }}\"/" release/app/package.json
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ env.new_version }}\"/" release/app/package-lock.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" release/app/package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.increment_version.outputs.new_version }}\"/" release/app/package-lock.json
 
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -a -m "Release v${{ env.new_version }} [skip ci]"
+          git commit -a -m "Release v${{ steps.increment_version.outputs.new_version }} [skip ci]"
           git push
 
   build-and-package:
@@ -81,27 +81,23 @@ jobs:
           name: release-builds
           path: release/build
 
-      # - name: Create release
-      #   id: create_release
-      #   uses: meeDamian/github-release@2.0
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     tag: v${{ needs.increment_version.outputs.new_version }}
-      #     name: Release v${{ needs.increment_version.outputs.new_version }}
-      #     body: Release builds v${{ needs.increment_version.outputs.new_version }}
-      #     files: release/build
+      - name: Read version of package.json
+        id: release_version
+        run: |
+          echo "new_version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Create release
         id: create_release
         run: |
-          echo "v: ${{ env.new_version }}"
+          echo "v: ${{ steps.release_version.outputs.new_version }}"
           RESPONSE=$(curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
             -H "X-GitHub-Api-Version: 2022-11-28"\
             https://api.github.com/repos/amirfakhrullah/electron-react/releases \
             -d '{
-            "tag_name": "v${{ env.new_version }}",
-            "name": "Release v${{ env.new_version }}",
+            "tag_name": "v: ${{ steps.release_version.outputs.new_version }}",
+            "name": "Release v: ${{ steps.release_version.outputs.new_version }}",
             "draft": false,
             "prerelease": false,
             "generate_release_notes":true
