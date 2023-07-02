@@ -103,7 +103,7 @@ jobs:
             "draft": false,
             "prerelease": false,
             "generate_release_notes":true
-          })
+          }')
           echo "release_id=$(echo "$RESPONSE" | jq -r '.id')" >> $GITHUB_OUTPUT
 
       - name: Upload builds to the release
