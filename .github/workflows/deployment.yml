@@ -83,10 +83,10 @@ jobs:
       - name: Create release
         id: create_release
         uses: meeDamian/github-release@2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ needs.increment_version.outputs.new_version }}
-          release_name: Release v${{ needs.increment_version.outputs.new_version }}
-          files: release/build/
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ needs.increment_version.outputs.new_version }}
+          name: Release v${{ needs.increment_version.outputs.new_version }}
+          files: |
+            ./release/build/*Setup*.exe
 
