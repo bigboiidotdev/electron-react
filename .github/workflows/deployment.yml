@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  increment-version:
+  update-version:
     runs-on: ubuntu-latest
 
     steps:
@@ -45,7 +45,7 @@ jobs:
           git push
 
   build-and-package:
-    needs: increment-version
+    needs: update-version
     runs-on: windows-latest
 
     steps:
@@ -70,7 +70,7 @@ jobs:
           path: release/build
 
   create-release:
-    needs: [increment-version, build-and-package]
+    needs: [update-version, build-and-package]
     runs-on: ubuntu-latest
 
     steps:
@@ -92,15 +92,15 @@ jobs:
       - name: Create release
         id: create_release
         run: |
-          echo "v: ${{ needs.increment_version.outputs.new_version }}"
+          echo "v: ${{ needs.update-version.outputs.new_version }}"
           RESPONSE=$(curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
             -H "X-GitHub-Api-Version: 2022-11-28"\
             https://api.github.com/repos/amirfakhrullah/electron-react/releases \
             -d '{
-            "tag_name": "v${{ needs.increment_version.outputs.new_version }}",
-            "name": "Release v${{ needs.increment_version.outputs.new_version }}",
+            "tag_name": "v${{ needs.update-version.outputs.new_version }}",
+            "name": "Release v${{ needs.update-version.outputs.new_version }}",
             "draft": false,
             "prerelease": false,
             "generate_release_notes":true
