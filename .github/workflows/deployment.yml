@@ -114,7 +114,7 @@ jobs:
         run: |
           FILE_PATH=$(find ./release/build -name "*Setup*.exe" | head -n 1)
           FILE_NAME=$(basename "$FILE_PATH")
-          NEW_FILE_NAME="ElectronReact-{{ steps.read_yml_version.outputs.version }}-win.exe"
+          NEW_FILE_NAME="ElectronReact-${{ steps.read_yml_version.outputs.version }}-win.exe"
           NEW_FILE_PATH="./release/build/$NEW_FILE_NAME"
           mv "$FILE_PATH" "$NEW_FILE_PATH"
           curl -L \
