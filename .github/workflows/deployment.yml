@@ -104,8 +104,8 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28"\
             https://api.github.com/repos/amirfakhrullah/electron-react/releases \
             -d '{
-            "tag_name": "v: ${{ steps.release_version.outputs.new_version }}",
-            "name": "Release v: ${{ steps.release_version.outputs.new_version }}",
+            "tag_name": "v${{ steps.release_version.outputs.new_version }}",
+            "name": "Release v${{ steps.release_version.outputs.new_version }}",
             "draft": false,
             "prerelease": false,
             "generate_release_notes":true
