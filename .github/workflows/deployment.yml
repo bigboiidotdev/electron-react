@@ -2,8 +2,8 @@ name: Deployment
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '*'
 
 jobs:
   increment-version:
@@ -18,15 +18,16 @@ jobs:
         with:
           node-version: 14
 
-      - name: Read package.json
-        id: read_package_json
-        run: |
-          echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
+      # - name: Read package.json
+      #   id: read_package_json
+      #   run: |
+      #     echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
+          # VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
 
       - name: Increment version
         id: increment_version
         run: |
-          VERSION=$(echo "${{ steps.read_package_json.outputs.version }}")
+          VERSION=${{ github.ref }}
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MINOR=$(echo "$VERSION" | cut -d. -f2)
           PATCH=$(echo "$VERSION" | cut -d. -f3)
@@ -80,12 +81,13 @@ jobs:
           name: release-builds
           path: release/build
 
-      - name: Create release
-        id: create_release
-        uses: meeDamian/github-release@2.0
+      - name: Upload builds to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ needs.increment_version.outputs.new_version }}
-          name: Release v${{ needs.increment_version.outputs.new_version }}
-          files: release/build
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: release/build/*Setup*.exe
+          asset_name: build
+          overwrite: true
+
 
