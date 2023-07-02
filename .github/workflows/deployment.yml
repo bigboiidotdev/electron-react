@@ -81,6 +81,11 @@ jobs:
           name: release-builds
           path: release/build
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
       - name: Read version of package.json
         id: release_version
         run: |
