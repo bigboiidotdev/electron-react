@@ -88,5 +88,5 @@ jobs:
         with:
           tag_name: v${{ needs.increment_version.outputs.new_version }}
           release_name: Release v${{ needs.increment_version.outputs.new_version }}
-          files: release-win: release/build/
+          files: release/build/
 
