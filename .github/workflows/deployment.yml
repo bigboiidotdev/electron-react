@@ -115,21 +115,15 @@ jobs:
       - name: Upload release assets
         id: upload_assets
         run: |
+          FILE_PATH=$(find ./release/build -name "*Setup*.exe" | head -n 1)
+          FILE_NAME=$(basename "$FILE_PATH")
           curl -L \
-          -X POST \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Content-Type: application/zip" \
-          --data-binary "@build.zip" \
-          "${{ steps.create_release.outputs.upload_url }}?name=build.zip"
-
-          cd release/build
-          find . -name "*Setup*.exe" -type f -exec curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/octet-stream" \
-            --data-binary "@{}" \
-            "${{ steps.create_release.outputs.upload_url }}?name={}" \;
-          cd ../..
+            -H "Content-Type: application/zip" \
+            --data-binary "@$FILE_PATH" \
+            "${{ steps.create_release.outputs.upload_url }}?name=$FILE_NAME"
+
 
 
 
