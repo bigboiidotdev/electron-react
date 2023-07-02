@@ -115,19 +115,35 @@ jobs:
             "generate_release_notes":true
           }')
           echo "Response: $RESPONSE"
-          echo "release_id=$(echo "$RESPONSE" | jq -r '.id')" >> $GITHUB_OUTPUT
-          echo "release_id: $(echo "$RESPONSE" | jq -r '.id')"
+          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
 
-      - name: Upload builds to the release
+      # - name: Upload builds to the release
+      #   run: |
+      #     curl -L \
+      #     -X POST \
+      #     -H "Accept: application/vnd.github+json" \
+      #     -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
+      #     -H "X-GitHub-Api-Version: 2022-11-28" \
+      #     -H "Content-Type: application/zip" \
+      #     https://uploads.github.com/repos/amirfakhrullah/electron-react/releases/${{ steps.create_release.outputs.release_id }}/assets?name=build.zip \
+      #     --data-binary "@release/build.zip"
+
+      - name: Upload release assets
+        id: upload_assets
         run: |
-          curl -L \
-          -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          -H "Content-Type: application/octet-stream" \
-          https://uploads.github.com/repos/amirfakhrullah/electron-react/releases/${{ steps.create_release.outputs.release_id }}/assets?name=build.zip \
-          --data-binary "@release/build.zip"
+          RESPONSE=${{ steps.create_release.outputs.release_id }}
+          RELEASE_ID=$(echo $RESPONSE | jq -r '.id')
+          UPLOAD_URL=$(echo $RESPONSE | jq -r '.upload_url' | sed -e "s/{?name,label}//")
+          ASSET_PATH="release/build/*Source*.exe"
+          for file in $ASSET_PATH; do
+            echo "Uploading $file..."
+            curl -L \
+              -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: $(file -b --mime-type $file)" \
+              --data-binary @$file \
+              "$UPLOAD_URL?name=$(basename $file)&label=$(basename $file)"
+          done
 
 
 
