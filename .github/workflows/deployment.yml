@@ -91,6 +91,9 @@ jobs:
           VERSION=$(yq eval '.version' ./release/build/latest.yml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Compress build folder
+        run: zip -r build.zip release/build
+
       - name: Create release
         id: create_release
         run: |
@@ -112,16 +115,12 @@ jobs:
       - name: Upload release assets
         id: upload_assets
         run: |
-          ASSET_PATH="release/build/*"
-          for file in $ASSET_PATH; do
-            echo "Uploading $file..."
-            curl -L \
-              -X POST \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: $(file -b --mime-type $file)" \
-              --data-binary @$file \
-              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)&label=$(basename $file)"
-          done
+          curl -L \
+          -X POST \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/zip" \
+          --data-binary "@build.zip" \
+          "${{ steps.create_release.outputs.upload_url }}?name=build.zip"
 
 
 
