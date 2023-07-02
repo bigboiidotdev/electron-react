@@ -124,6 +124,11 @@ jobs:
             --data-binary "@$NEW_FILE_PATH" \
             "${{ steps.create_release.outputs.upload_url }}?name=$NEW_FILE_NAME"
 
+      - name: Delete Artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: release-build-win
+
 
 
 
