@@ -21,7 +21,9 @@ jobs:
       - name: Extract tag name prefix
         id: extract-prefix
         run: |
-          echo "prefix=${{ github.event.release.tag_name#v }}" >> $GITHUB_OUTPUT
+          TAG_NAME=${{ github.event.release.tag_name }}
+          TAG_NAME=${TAG_NAME#v}
+          echo "prefix=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Update version in package.json & package-lock.json
         run: |
