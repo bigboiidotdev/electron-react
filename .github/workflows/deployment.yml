@@ -20,8 +20,8 @@ jobs:
 
       - name: Update version in package.json & package-lock.json
         run: |
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ github.event.release.tag_name }}\"/" release/app/package.json
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ github.event.release.tag_name }}\"/" release/app/package-lock.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ github.event.release.tag_name.slice(0, 3) }}\"/" release/app/package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ github.event.release.tag_name.slice(0, 3) }}\"/" release/app/package-lock.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
