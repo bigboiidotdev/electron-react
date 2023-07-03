@@ -117,7 +117,7 @@ jobs:
           curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/zip" \
+            -H "Content-Type: application/octet-stream" \
             --data-binary "@$FILE_PATH" \
             "${{ steps.create_release.outputs.upload_url }}?name=$FILE_NAME"
 
