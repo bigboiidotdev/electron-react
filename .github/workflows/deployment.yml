@@ -46,7 +46,7 @@ jobs:
 
       - name: Push changes
         run: |
-          git push origin release-${{ steps.set_latest_version.outputs.new_version }}
+          git push -u origin release-${{ steps.set_latest_version.outputs.new_version }}
 
       - name: Create pull request
         id: create_pr
