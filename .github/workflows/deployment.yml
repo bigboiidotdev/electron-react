@@ -39,11 +39,11 @@ jobs:
           sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.set_latest_version.outputs.new_version }}\"/" release/app/package-lock.json
 
       - name: Commit and push changes
+        env:
+          PAT: ${{ secrets.OWNER_TOKEN }}
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
           git commit -a -m "Release v${{ steps.set_latest_version.outputs.new_version }} [skip ci]"
-          git push
+          git push ${{ github.event.inputs.branch }} --force-with-lease
 
 
   build-win:
