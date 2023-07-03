@@ -23,6 +23,12 @@ jobs:
         run: |
           echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Checkout branch
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git checkout -b release-${{ steps.set_latest_version.outputs.new_version }}
+
       - name: Set latest version
         id: set_latest_version
         run: |
@@ -40,13 +46,8 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git checkout -b release-${{ steps.set_latest_version.outputs.new_version }}
-          git commit -a -m "Release v${{ steps.set_latest_version.outputs.new_version }} [skip ci]"
-
-      - name: Push changes
-        run: |
+          git add .
+          git commit -m "Release v${{ steps.set_latest_version.outputs.new_version }} [skip ci]"
           git push -u origin release-${{ steps.set_latest_version.outputs.new_version }}
 
       - name: Create pull request
