@@ -3,7 +3,7 @@ name: Deployment
 on:
   release:
     types:
-      - publish
+      - created
 
 jobs:
   increment-version:
