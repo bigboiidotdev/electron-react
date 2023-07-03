@@ -42,6 +42,8 @@ jobs:
         env:
           PAT: ${{ secrets.OWNER_TOKEN }}
         run: |
+          git config --global user.email "${{ secrets.OWNER_EMAIL }}"
+          git config --global user.name "${{ secrets.OWNER_NAME }}"
           git commit -a -m "Release v${{ steps.set_latest_version.outputs.new_version }} [skip ci]"
           git push ${{ github.event.inputs.branch }} --force-with-lease
 
