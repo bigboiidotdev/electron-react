@@ -118,7 +118,7 @@ jobs:
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/zip" \
-            --data-binary "@$NEW_FILE_PATH" \
+            --data-binary "@$FILE_PATH" \
             "${{ steps.create_release.outputs.upload_url }}?name=$FILE_NAME"
 
       - name: Delete Artifacts
