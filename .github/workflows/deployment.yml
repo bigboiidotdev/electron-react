@@ -5,8 +5,6 @@ on:
     branches:
       - main
 
-permissions: read-all|write-all
-
 jobs:
   increment-version:
     runs-on: ubuntu-latest
@@ -51,19 +49,28 @@ jobs:
           git push origin release-${{ steps.set_latest_version.outputs.new_version }}
 
       - name: Create pull request
+        id: create_pr
         uses: peter-evans/create-pull-request@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.OWNER_TOKEN }}
           branch: release-${{ steps.set_latest_version.outputs.new_version }}
           base: main
           title: "Release v${{ steps.set_latest_version.outputs.new_version }} [skip ci]"
           body: "Release v${{ steps.set_latest_version.outputs.new_version }} [skip ci]"
 
-      - name: Merge pull request
-        uses: peter-evans/merge-pull-request@v3
+      - name: Auto approve
+        if: steps.create_pr.outputs.pull-request-operation == 'created'
+        run: gh pr review --approve "${{ steps.create_pr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+       - name: Enable Pull Request Automerge
+        if: steps.create_pr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull_request_number: ${{ github.event.pull_request.number }}
+          token: ${{ secrets.OWNER_TOKEN }}
+          pull-request-number: ${{ steps.create_pr.outputs.pull-request-number }}
+          merge-method: squash
 
   build-win:
     needs: increment-version
