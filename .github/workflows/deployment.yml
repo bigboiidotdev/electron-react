@@ -23,12 +23,6 @@ jobs:
         run: |
           echo "version=$(node -p "require('./release/app/package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Checkout branch
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git checkout -b release-${{ steps.set_latest_version.outputs.new_version }}
-
       - name: Set latest version
         id: set_latest_version
         run: |
@@ -38,6 +32,12 @@ jobs:
           PATCH=$(echo "$VERSION" | cut -d. -f3)
           NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Checkout branch
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git checkout -b release-${{ steps.set_latest_version.outputs.new_version }}
 
       - name: Update version in package.json & package-lock.json
         run: |
