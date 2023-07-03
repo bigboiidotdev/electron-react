@@ -113,16 +113,13 @@ jobs:
         id: upload_assets
         run: |
           FILE_PATH=$(find ./release/build -name "*Setup*.exe" | head -n 1)
-          FILE_NAME=$(basename "$FILE_PATH")
-          NEW_FILE_NAME="ElectronReact-${{ steps.read_yml_version.outputs.version }}-win.exe"
-          NEW_FILE_PATH="./release/build/$NEW_FILE_NAME"
-          mv "$FILE_PATH" "$NEW_FILE_PATH"
+          FILE_NAME="ElectronReact-${{ steps.read_yml_version.outputs.version }}-win.exe"
           curl -L \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/zip" \
             --data-binary "@$NEW_FILE_PATH" \
-            "${{ steps.create_release.outputs.upload_url }}?name=$NEW_FILE_NAME"
+            "${{ steps.create_release.outputs.upload_url }}?name=$FILE_NAME"
 
       - name: Delete Artifacts
         uses: geekyeggo/delete-artifact@v2
@@ -132,3 +129,5 @@ jobs:
 
 
 
+          # NEW_FILE_PATH="./release/build/$NEW_FILE_NAME"
+          # mv "$FILE_PATH" "$NEW_FILE_PATH"
