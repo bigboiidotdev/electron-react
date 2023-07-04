@@ -97,7 +97,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/octet-stream" \
             --data-binary "@$FILE_PATH" \
-            "https://uploads.github.com/repos/amirfakhrullah/electron-react/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
       - name: Delete release-build-win artifacts
         uses: geekyeggo/delete-artifact@v2
