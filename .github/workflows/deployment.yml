@@ -13,11 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-
       - name: Extract tag name prefix
         id: extract-prefix
         run: |
@@ -30,10 +25,10 @@ jobs:
           sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.extract-prefix.outputs.prefix }}\"/" release/app/package.json
           sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.extract-prefix.outputs.prefix }}\"/" release/app/package-lock.json
 
-      - name: Upload artifacts
+      - name: Upload app-version artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: version
+          name: app-version
           path: release/app
 
   build-win:
@@ -43,11 +38,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
 
       - name: Download release builds
         uses: actions/download-artifact@v2
         with:
-          name: version
+          name: app-version
           path: release/app
 
       - name: Install dependencies
@@ -55,8 +55,13 @@ jobs:
 
       - name: Build Electron app
         run: npm run package -- --win
+      
+      - name: Delete version artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: app-version
 
-      - name: Upload artifacts
+      - name: Upload release-build-win artifacts
         uses: actions/upload-artifact@v2
         with:
           name: release-build-win
@@ -94,7 +99,7 @@ jobs:
             --data-binary "@$FILE_PATH" \
             "https://uploads.github.com/repos/amirfakhrullah/electron-react/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
-      - name: Delete Artifacts
+      - name: Delete release-build-win artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
           name: release-build-win
