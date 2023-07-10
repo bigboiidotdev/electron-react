@@ -38,11 +38,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 18
 
       - name: Download release builds
         uses: actions/download-artifact@v2
@@ -55,11 +55,6 @@ jobs:
 
       - name: Build Electron app
         run: npm run package -- --win
-      
-      - name: Delete version artifacts
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: app-version
 
       - name: Upload release-build-win artifacts
         uses: actions/upload-artifact@v2
@@ -67,30 +62,71 @@ jobs:
           name: release-build-win
           path: release/build
 
-  create-release:
-    needs: build-win
-    runs-on: ubuntu-latest
+  build-mac:
+    needs: increment-version
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+
       - name: Download release builds
         uses: actions/download-artifact@v2
         with:
-          name: release-build-win
+          name: app-version
+          path: release/app
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Build Electron app
+        run: npm run package -- --mac
+
+      - name: Upload release-build-mac artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-build-mac
           path: release/build
+
+  create-release:
+    needs: [build-win, build-mac]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete version artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: app-version
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download win release builds
+        uses: actions/download-artifact@v2
+        with:
+          name: release-build-win
+          path: release/build-win
+
+      - name: Download win release builds
+        uses: actions/download-artifact@v2
+        with:
+          name: release-build-mac
+          path: release/build-mac
 
       - name: Get the latest version from latest.yml
         id: read_yml_version
         run: |
-          VERSION=$(yq eval '.version' ./release/build/latest.yml)
+          VERSION=$(yq eval '.version' ./release/build-win/latest.yml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Upload release assets
-        id: upload_assets
+      - name: Upload win release assets
         run: |
-          FILE_PATH=$(find ./release/build -name "*Setup*.exe" | head -n 1)
+          FILE_PATH=$(find ./release/build-win -name "*Setup*.exe" | head -n 1)
           FILE_NAME="ElectronReact-${{ steps.read_yml_version.outputs.version }}-win.exe"
           curl -L \
             -X POST \
@@ -99,7 +135,26 @@ jobs:
             --data-binary "@$FILE_PATH" \
             "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
+      - name: Upload mac release assets
+        run: |
+          FILE_PATH=$(find ./release/build-mac -name "*.dmg")
+
+          for FILE in $FILE_PATH; do
+            FILENAME=$(basename "$FILE")
+            curl -L \
+              -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@$FILE" \
+              "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILENAME"
+          done
+
       - name: Delete release-build-win artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
           name: release-build-win
+
+      - name: Delete release-build-mac artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: release-build-mac
