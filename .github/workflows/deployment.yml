@@ -68,7 +68,7 @@ jobs:
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/octet-stream" \
-            --data-binary "@$FILE_PATH" \
+            -d "@$FILE_PATH" \
             "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILENAME"
 
   build-mac-and-upload-release:
