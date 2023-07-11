@@ -54,7 +54,7 @@ jobs:
         run: npm i
 
       - name: Build Electron app
-        run: npm run package
+        run: npm run package -- --win
 
       - name: Install curl
         run: choco install curl -y
@@ -90,7 +90,7 @@ jobs:
         run: npm i
 
       - name: Build Electron app
-        run: npm run package
+        run: npm run package -- --mac
 
       - name: Upload release
         run: |
