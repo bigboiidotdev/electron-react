@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload release
         run: |
-          FILE_PATH=$(find ./release/build -name "*.dmg")
+          FILE_PATH=$(find ./release/build ! -name "*arm64*" -name "*.dmg")
 
           for FILE in $FILE_PATH; do
             FILENAME=$(basename "$FILE")
