@@ -58,8 +58,8 @@ jobs:
 
       - name: Upload release
         run: |
-          $FILE_PATH = Get-ChildItem -Path ./release/build-win -Filter "*Setup*.exe" | Select-Object -First 1
-          $FILE_NAME = "ElectronReact-${{ steps.read_yml_version.outputs.version }}-win.exe"
+          $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
+          $FILE_NAME = "ElectronReact-${{ github.event.release.tag_name }}-win.exe"
           $URI = "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
           Invoke-RestMethod -Uri $URI -Method Post -Headers @{
@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload release
         run: |
-          FILE_PATH=$(find ./release/build-mac -name "*.dmg")
+          FILE_PATH=$(find ./release/build -name "*.dmg")
 
           for FILE in $FILE_PATH; do
             FILENAME=$(basename "$FILE")
