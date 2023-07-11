@@ -56,15 +56,20 @@ jobs:
       - name: Build Electron app
         run: npm run package -- --win
 
+      - name: Install curl
+        run: choco install curl -y
+
       - name: Upload release
         run: |
           $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
           $FILE_NAME = "ElectronReact-${{ github.event.release.tag_name }}-win.exe"
 
-          Invoke-RestMethod -Uri "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME" -Method Post -Headers @{
-              "Authorization" = "Bearer {{ secrets.GITHUB_TOKEN }}"
-              "Content-Type" = "application/octet-stream"
-          } -InFile $FILE_PATH
+          curl -L \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$FILE_PATH" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILENAME"
 
   build-mac-and-upload-release:
     needs: increment-version
