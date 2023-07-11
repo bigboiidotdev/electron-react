@@ -94,17 +94,15 @@ jobs:
 
       - name: Upload release
         run: |
-          FILE_PATH=$(find ./release/build ! -name "*arm64*" -name "*.dmg")
+          FILE_PATH=$(find ./release/build ! -name "*arm64*" -name "*.dmg" | head -n 1)
+          FILE_NAME="ElectronReact-${{ github.event.release.tag_name }}-mac.dmg"
 
-          for FILE in $FILE_PATH; do
-            FILENAME=$(basename "$FILE")
-            curl -L \
-              -X POST \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary "@$FILE" \
-              "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILENAME"
-          done
+          curl -L \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$FILE_PATH" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
   cleanups:
     needs: [build-win-and-upload-release, build-mac-and-upload-release]
