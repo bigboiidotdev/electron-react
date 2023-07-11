@@ -62,7 +62,7 @@ jobs:
       - name: Upload release
         run: |
           $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
-          $FILE_NAME = "ElectronReact-${{ steps.read_yml_version.outputs.version }}-win.exe"
+          $FILE_NAME = "ElectronReact-${{ github.event.release.tag_name }}-win.exe"
           $URL = "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
           & curl -L -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Content-Type: application/octet-stream" -d "@$($FILE_PATH.FullName)" $URL
