@@ -63,7 +63,7 @@ jobs:
           $URI = "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
           Invoke-RestMethod -Uri $URI -Method Post -Headers @{
-              "Authorization" = "Bearer $env:GITHUB_TOKEN"
+              "Authorization" = "Bearer {{ secrets.GITHUB_TOKEN }}"
               "Content-Type" = "application/octet-stream"
           } -InFile $FILE_PATH
 
