@@ -61,27 +61,32 @@ jobs:
 
       - name: Import Code Signing Certificate
         run: |
-          curl -o certificate.pfx -u "${{ secrets.DIGICERT_API_KEY }}:" "https://www.digicert.com/api/secure/code-signing/v1/certificate/${{ secrets.DIGICERT_CERTIFICATE_ID }}/pfx"
+          $certificateID = "${{ secrets.DIGICERT_CERTIFICATE_ID }}"
+          $keylockerAPIKey = "${{ secrets.DIGICERT_KEYLOCKER_API_KEY }}"
+
+          # Download the certificate from DigiCert KeyLocker
+          curl -o certificate.pfx -u "${keylockerAPIKey}:" "https://www.digicert.com/api/secure/code-signing/v1/certificate/${certificateID}/pfx"
 
       - name: Code Sign Installer
         run: |
-          $certificatePassword = ${{ secrets.CODE_SIGNING_CERTIFICATE_PASSWORD }}
+          $installerPath = 'release/build/**Setup**.exe'
           $certificateFile = 'certificate.pfx'
-          $installerPath = '/app/release/**Setup**.exe'
 
+          # Sign the installer using the certificate from DigiCert KeyLocker and PKCS#11
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' sign `
             /f "$certificateFile" `
-            /p $certificatePassword `
+            /kc `
             /t "http://timestamp.digicert.com" `
             /v "$installerPath"
 
       - name: Verify Code Signing
         run: |
-          $installerPath = 'path/to/your/installer.exe'
+          $installerPath = 'release/build/**Setup**.exe'
 
+          # Verify the code signing of the signed installer
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' verify `
             /pa `
-            /v "$installerPa
+            /v "$installerPath"
 
       - name: Upload release
         run: |
