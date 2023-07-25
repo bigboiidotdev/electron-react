@@ -65,15 +65,19 @@ jobs:
           $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
           echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
 
-      - name: Code Sign
-        uses: dlemstra/code-sign-action@v1
-        with:
-          certificate: '${{ secrets.FULL_CERT }}'
-          password: '${{ secrets.SM_CLIENT_CERT_PASSWORD }}'
-          folder: './release/build'
-          recursive: true
-          files: |
-            ${{ steps.file-path.outputs.file }}
+      - name: Find Signtool
+        id: signtool
+        run: |
+          $DIR_path = dir "C:\Program Files (x86)\Microsoft SDKs\Windows\ " /s /b | findstr /i signtool.exe
+          echo "dirPath=$DIR_path" >> $GITHUB_OUTPUT
+
+      - name: Signing using signtool
+        run: |
+          "${{ steps.signtool.outputs.dirPath }}" sign /sha1 ${{ secrets.THUMBPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "${{ steps.file-path.outputs.file }}"
+
+      - name: Signtool verify
+        run: |
+          "${{ steps.signtool.outputs.dirPath }}" verify /v /pa "${{ steps.file-path.outputs.file }}"
 
       - name: Upload release
         run: |
