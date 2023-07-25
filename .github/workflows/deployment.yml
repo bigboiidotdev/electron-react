@@ -59,6 +59,30 @@ jobs:
       - name: Install curl
         run: choco install curl -y
 
+      - name: Import Code Signing Certificate
+        run: |
+          curl -o certificate.pfx -u "${{ secrets.DIGICERT_API_KEY }}:" "https://www.digicert.com/api/secure/code-signing/v1/certificate/${{ secrets.DIGICERT_CERTIFICATE_ID }}/pfx"
+
+      - name: Code Sign Installer
+        run: |
+          $certificatePassword = ${{ secrets.CODE_SIGNING_CERTIFICATE_PASSWORD }}
+          $certificateFile = 'certificate.pfx'
+          $installerPath = '/app/release/**Setup**.exe'
+
+          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' sign `
+            /f "$certificateFile" `
+            /p $certificatePassword `
+            /t "http://timestamp.digicert.com" `
+            /v "$installerPath"
+
+      - name: Verify Code Signing
+        run: |
+          $installerPath = 'path/to/your/installer.exe'
+
+          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' verify `
+            /pa `
+            /v "$installerPa
+
       - name: Upload release
         run: |
           $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
