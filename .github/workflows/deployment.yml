@@ -59,6 +59,13 @@ jobs:
       - name: Install curl
         run: choco install curl -y
 
+      - name: Find SignTool Path
+        id: signtool
+        run: |
+          $signToolPath = Get-Command signtool.exe | Select-Object -ExpandProperty Source
+          echo "SignTool Path: $signToolPath"
+          echo "##[set-output name=signToolPath]$signToolPath"
+
       - name: Import Code Signing Certificate
         run: |
           $certificateID = "${{ secrets.DIGICERT_CERTIFICATE_ID }}"
@@ -72,8 +79,11 @@ jobs:
           $installerPath = './release/build/**Setup**.exe'
           $certificateFile = './certificate.pfx'
 
-          # Sign the installer using the certificate from DigiCert KeyLocker and PKCS#11
-          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' sign `
+          # Retrieve the SignTool Path from the previous step's output
+          $signToolPath = $env:SIGNTOOL_PATH
+
+          # Sign the installer using the certificate from DigiCert KeyLocker with PKCS#11
+          & "$signToolPath" sign `
             /f "$certificateFile" `
             /t "http://timestamp.digicert.com" `
             /v "$installerPath"
@@ -82,8 +92,11 @@ jobs:
         run: |
           $installerPath = 'release/build/**Setup**.exe'
 
+          # Retrieve the SignTool Path from the previous step's output
+          $signToolPath = $env:SIGNTOOL_PATH
+
           # Verify the code signing of the signed installer
-          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' verify `
+          & "$signToolPath" verify `
             /pa `
             /v "$installerPath"
 
