@@ -68,7 +68,7 @@ jobs:
       - name: Find Signtool
         id: signtool
         run: |
-          $DIR_path = dir "C:\Program Files (x86)\Microsoft SDKs\Windows\ " /s /b | findstr /i signtool.exe
+          $DIR_path = & dir "C:\Program Files (x86)\Microsoft SDKs\Windows\ " /s /b | findstr /i signtool.exe
           echo "dirPath=$DIR_path" >> $GITHUB_OUTPUT
 
       - name: Signing using signtool
