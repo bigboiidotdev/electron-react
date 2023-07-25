@@ -68,7 +68,7 @@ jobs:
       - name: Find Signtool
         id: signtool
         run: |
-          $DIR_path = & dir "C:\Program Files (x86)\Microsoft SDKs\Windows\ " /s /b | findstr /i signtool.exe
+          $DIR_path = Get-ChildItem -Path "C:\Program Files (x86)\Microsoft SDKs\Windows\" -Recurse -Include "signtool.exe" | Select-Object -First 1 -ExpandProperty FullName
           echo "dirPath=$DIR_path" >> $GITHUB_OUTPUT
 
       - name: Signing using signtool
