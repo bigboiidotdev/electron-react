@@ -59,6 +59,22 @@ jobs:
       - name: Install curl
         run: choco install curl -y
 
+      - name: Get path
+        id: file-path
+        run: |
+          $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
+          echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
+
+      - name: Code Sign
+        uses: dlemstra/code-sign-action@v1
+        with:
+          certificate: '${{ secrets.FULL_CERT }}'
+          password: '${{ secrets.SM_CLIENT_CERT_PASSWORD }}'
+          folder: 'files'
+          recursive: true
+          files: |
+            ${{ steps.file-path.outputs.file }}
+
       - name: Find SignTool Path
         id: signtool
         run: |
