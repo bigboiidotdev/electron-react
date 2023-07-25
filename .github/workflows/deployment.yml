@@ -70,7 +70,7 @@ jobs:
         with:
           certificate: '${{ secrets.FULL_CERT }}'
           password: '${{ secrets.SM_CLIENT_CERT_PASSWORD }}'
-          folder: 'files'
+          folder: './release/build'
           recursive: true
           files: |
             ${{ steps.file-path.outputs.file }}
