@@ -66,12 +66,9 @@ jobs:
       #     echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
 
       - name: Code sign Windows
-        env:
-          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
         run: |
-          echo "${WINDOWS_CERTIFICATE_BASE64}" | base64 --decode > cert.pfx
-          npm run package -- --win --x64 --publish never --project ./electron-builder-config.yml --config.win.certificateFile=cert.pfx --config.win.certificatePassword="${WINDOWS_CERTIFICATE_PASSWORD}"
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > cert.pfx
+          npm run package -- --win --project ./electron-builder-config.yml --config.win.certificateFile=cert.pfx --config.win.certificatePassword="${{ secrets.SM_CLIENT_CERT_PASSWORD }}"
 
       - name: Upload release
         run: |
