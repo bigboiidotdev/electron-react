@@ -67,8 +67,8 @@ jobs:
 
       - name: Code sign Windows
         run: |
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > cert.pfx
-          npm run package -- --win --project ./electron-builder-config.yml --config.win.certificateFile=cert.pfx --config.win.certificatePassword="${{ secrets.SM_CLIENT_CERT_PASSWORD }}"
+          curl -o certificate.pfx -u "${{ secrets.DIGICERT_API_KEY }}:" "https://www.digicert.com/api/secure/code-signing/v1/certificate/${{ secrets.DIGICERT_CERTIFICATE_ID }}/pfx"  
+          npm run package -- --win --project ./electron-builder-config.yml --config.win.certificateFile=certificate.pfx --config.win.certificatePassword="${{ secrets.SM_CLIENT_CERT_PASSWORD }}"
 
       - name: Upload release
         run: |
