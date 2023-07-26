@@ -65,7 +65,6 @@ jobs:
           $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
           echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
 
-
       - name: Setup Certificate
         run: |
           echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > Certificate_pkcs12.p12
@@ -104,8 +103,6 @@ jobs:
         run: |
           signtool.exe sign /sha1 ${{ secrets.THUMBPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "${{ steps.file-path.outputs.file }}"
         shell: cmd
-        run: |
-          "${{ steps.signtool.outputs.dirPath }}\signtool.exe" sign /sha1 ${{ secrets.THUMBPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "${{ steps.file-path.outputs.file }}"
 
       - name: Signtool verify
         run: |
