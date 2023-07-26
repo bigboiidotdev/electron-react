@@ -69,7 +69,7 @@ jobs:
       - name: Setup Certificate
         run: |
           echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > Certificate_pkcs12.p12
-          cat Certificate_pkcs12.p12
+        shell: bash
           
       - name: Set variables
         id: variables
@@ -81,30 +81,36 @@ jobs:
           echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
           echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $GITHUB_PATH
           echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $GITHUB_PATH
-          echo "C:\Program Files\DigiCert\DigiCert One Signing Manager Tools" >> $GITHUB_PATH
+          echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
+        shell: bash
 
       - name: Setup SSM KSP on windows latest
         run: |
           curl -X GET  https://stage.one.digicert.com/signingmanager/api-ui/v1/releases/smtools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o smtools-windows-x64.msi
           msiexec /i smtools-windows-x64.msi /quiet /qn
+        shell: cmd
+
+      - name: Register KSP
+        run: |
           smksp_registrar.exe list
-          smctl.exe keypair ls
-          C:\Windows\System32\certutil.exe -csp "DigiCert Signing Manager KSP" -key -user
-          smksp_cert_sync.exe
+        shell: cmd
 
       - name: Find Signtool
-        id: signtool
         run: |
-          $DIR_path = Get-ChildItem -Path "C:\Program Files (x86)\Microsoft SDKs\Windows\" -Recurse -Include "signtool.exe" | Select-Object -First 1 -ExpandProperty FullName
-          echo "dirPath=$DIR_path" >> $GITHUB_OUTPUT
+          dir "C:\Program Files (x86)\Microsoft SDKs\Windows\ " /s /b | findstr /i signtool.exe
+        shell: cmd
 
       - name: Signing using signtool
+        run: |
+          signtool.exe sign /sha1 ${{ secrets.THUMBPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "${{ steps.file-path.outputs.file }}"
+        shell: cmd
         run: |
           "${{ steps.signtool.outputs.dirPath }}\signtool.exe" sign /sha1 ${{ secrets.THUMBPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "${{ steps.file-path.outputs.file }}"
 
       - name: Signtool verify
         run: |
-          "${{ steps.signtool.outputs.dirPath }}\signtool.exe" verify /v /pa "${{ steps.file-path.outputs.file }}"
+          signtool verify /v /pa "${{ steps.file-path.outputs.file }}"
+        shell: cmd
 
       - name: Upload release
         run: |
