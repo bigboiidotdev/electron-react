@@ -53,65 +53,25 @@ jobs:
       - name: Install dependencies
         run: npm i
 
-      - name: Build Electron app
-        run: npm run package -- --win
+      # - name: Build Electron app
+      #   run: npm run package -- --win
 
       - name: Install curl
         run: choco install curl -y
 
-      - name: Get path
-        id: file-path
-        run: |
-          $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
-          echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
+      # - name: Get path
+      #   id: file-path
+      #   run: |
+      #     $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
+      #     echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
 
-      - name: Setup Certificate
+      - name: Code sign Windows
+        env:
+          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
         run: |
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
-        shell: bash
-          
-      - name: Set variables
-        id: variables
-        run: |
-          echo "::set-output name=version::${GITHUB_REF#refs/tags/v}"
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
-          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $GITHUB_PATH
-          echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $GITHUB_PATH
-          echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Setup SSM KSP on windows latest
-        run: |
-          curl -X GET  https://stage.one.digicert.com/signingmanager/api-ui/v1/releases/smtools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o smtools-windows-x64.msi
-          msiexec /i smtools-windows-x64.msi /quiet /qn
-          smksp_registrar.exe list
-          smctl.exe keypair ls
-          C:\Windows\System32\certutil.exe -csp "DigiCert Signing Manager KSP" -key -user
-          smksp_cert_sync.exe
-        shell: cmd
-
-      - name: Register KSP
-        run: |
-          smksp_registrar.exe list
-        shell: cmd
-
-      - name: Find Signtool
-        run: |
-          dir "C:\Program Files (x86)\Microsoft SDKs\Windows\ " /s /b | findstr /i signtool.exe
-        shell: cmd
-
-      - name: Signing using signtool
-        run: |
-          signtool.exe sign /sha1 ${{ secrets.THUMBPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "${{ steps.file-path.outputs.file }}"
-        shell: cmd
-
-      - name: Signtool verify
-        run: |
-          signtool verify /v /pa "${{ steps.file-path.outputs.file }}"
-        shell: cmd
+          echo "${WINDOWS_CERTIFICATE_BASE64}" | base64 --decode > cert.pfx
+          npm run package -- --win --x64 --publish never --project ./electron-builder-config.yml --config.win.certificateFile=cert.pfx --config.win.certificatePassword="${WINDOWS_CERTIFICATE_PASSWORD}"
 
       - name: Upload release
         run: |

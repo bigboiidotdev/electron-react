@@ -1,0 +1,14 @@
+productName: My Electron App
+directories:
+  output: dist
+electronVersion: 15.0.0  # Replace this with the version of Electron you want to use
+
+files:
+  # Add files and directories that need to be included in the package
+  - from: "./release/build/**Setup**.exe"  # Replace this with the path to your built Electron app
+
+win:
+  target: nsis
+  publisherName: Example Inc
+  certificateFile: cert.pfx  # This will be replaced with the value set in the GitHub Actions workflow for Windows code signing
+  certificatePassword: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}  # Reference the secret for the password
