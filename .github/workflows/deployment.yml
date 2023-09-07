@@ -6,121 +6,135 @@ on:
       - created
 
 jobs:
-  increment-version:
-    runs-on: ubuntu-latest
+  # increment-version:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Extract tag name prefix
-        id: extract-prefix
-        run: |
-          TAG_NAME=${{ github.event.release.tag_name }}
-          TAG_NAME=${TAG_NAME#v}
-          echo "prefix=$TAG_NAME" >> $GITHUB_OUTPUT
+  #     - name: Extract tag name prefix
+  #       id: extract-prefix
+  #       run: |
+  #         TAG_NAME=${{ github.event.release.tag_name }}
+  #         TAG_NAME=${TAG_NAME#v}
+  #         echo "prefix=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      - name: Update version in package.json & package-lock.json
-        run: |
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.extract-prefix.outputs.prefix }}\"/" release/app/package.json
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.extract-prefix.outputs.prefix }}\"/" release/app/package-lock.json
+  #     - name: Update version in package.json & package-lock.json
+  #       run: |
+  #         sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.extract-prefix.outputs.prefix }}\"/" release/app/package.json
+  #         sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.extract-prefix.outputs.prefix }}\"/" release/app/package-lock.json
 
-      - name: Upload app-version artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-version
-          path: release/app
+  #     - name: Upload app-version artifacts
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: app-version
+  #         path: release/app
 
-  build-win-and-upload-release:
-    needs: increment-version
-    runs-on: windows-latest
+  # build-win-and-upload-release:
+  #   needs: increment-version
+  #   runs-on: windows-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18
 
-      - name: Download release builds
-        uses: actions/download-artifact@v3
-        with:
-          name: app-version
-          path: release/app
+  #     - name: Download release builds
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: app-version
+  #         path: release/app
 
-      - name: Install dependencies
-        run: npm i
+  #     - name: Install dependencies
+  #       run: npm i
 
-      # - name: Build Electron app
-      #   run: npm run package -- --win
+  #     # - name: Build Electron app
+  #     #   run: npm run package -- --win
 
-      - name: Install curl
-        run: choco install curl -y
+  #     - name: Install curl
+  #       run: choco install curl -y
 
-      # - name: Get path
-      #   id: file-path
-      #   run: |
-      #     $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
-      #     echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
+  #     # - name: Get path
+  #     #   id: file-path
+  #     #   run: |
+  #     #     $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
+  #     #     echo "file=$FILE_PATH" >> $GITHUB_OUTPUT
 
-      - name: Code sign Windows
-        run: |
-          curl -o certificate.pfx -u "${{ secrets.DIGICERT_API_KEY }}:" "https://www.digicert.com/api/secure/code-signing/v1/certificate/${{ secrets.DIGICERT_CERTIFICATE_ID }}/pfx"  
-          npm run package -- --win --project ./electron-builder-config.yml --config.win.certificateFile=certificate.pfx --config.win.certificatePassword="${{ secrets.SM_CLIENT_CERT_PASSWORD }}"
+  #     - name: Code sign Windows
+  #       run: |
+  #         curl -o certificate.pfx -u "${{ secrets.DIGICERT_API_KEY }}:" "https://www.digicert.com/api/secure/code-signing/v1/certificate/${{ secrets.DIGICERT_CERTIFICATE_ID }}/pfx"  
+  #         npm run package -- --win --project ./electron-builder-config.yml --config.win.certificateFile=certificate.pfx --config.win.certificatePassword="${{ secrets.SM_CLIENT_CERT_PASSWORD }}"
 
-      - name: Upload release
-        run: |
-          $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
-          $FILE_NAME = "ElectronReact-${{ github.event.release.tag_name }}-win.exe"
-          $URL = "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
+  #     - name: Upload release
+  #       run: |
+  #         $FILE_PATH = Get-ChildItem -Path ./release/build -Filter "*Setup*.exe" | Select-Object -First 1
+  #         $FILE_NAME = "ElectronReact-${{ github.event.release.tag_name }}-win.exe"
+  #         $URL = "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
-          curl -L -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Content-Type: application/octet-stream" --data-binary "@$FILE_PATH" $URL
+  #         curl -L -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Content-Type: application/octet-stream" --data-binary "@$FILE_PATH" $URL
 
-  build-mac-and-upload-release:
-    needs: increment-version
-    runs-on: macos-latest
+  # build-mac-and-upload-release:
+  #   needs: increment-version
+  #   runs-on: macos-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18
 
-      - name: Download release builds
-        uses: actions/download-artifact@v3
-        with:
-          name: app-version
-          path: release/app
+  #     - name: Download release builds
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: app-version
+  #         path: release/app
 
-      - name: Install dependencies
-        run: npm i
+  #     - name: Install dependencies
+  #       run: npm i
 
-      - name: Build Electron app
-        run: npm run package -- --mac
+  #     - name: Build Electron app
+  #       run: npm run package -- --mac
 
-      - name: Upload release
-        run: |
-          FILE_PATH=$(find ./release/build ! -name "*arm64*" -name "*.dmg" | head -n 1)
-          FILE_NAME="ElectronReact-${{ github.event.release.tag_name }}-mac.dmg"
+  #     - name: Upload release
+  #       run: |
+  #         FILE_PATH=$(find ./release/build ! -name "*arm64*" -name "*.dmg" | head -n 1)
+  #         FILE_NAME="ElectronReact-${{ github.event.release.tag_name }}-mac.dmg"
 
-          curl -L \
-            -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/octet-stream" \
-            --data-binary "@$FILE_PATH" \
-            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
+  #         curl -L \
+  #           -X POST \
+  #           -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+  #           -H "Content-Type: application/octet-stream" \
+  #           --data-binary "@$FILE_PATH" \
+  #           "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=$FILE_NAME"
 
   cleanups:
-    needs: [build-win-and-upload-release, build-mac-and-upload-release]
+    # needs: [build-win-and-upload-release, build-mac-and-upload-release] 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Delete app-version artifacts
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: app-version
+      # - name: Delete app-version artifacts
+      #   uses: geekyeggo/delete-artifact@v2
+      #   with:
+      #     name: app-version
+
+      - name: Send URLs to Discord
+        run: |
+          DISCORD_WEBHOOK_URLS=("${{ secrets.DISCORD_WEBHOOK_URL }}" "${{ secrets.DISCORD_WEBHOOK_URL2 }}")
+          MESSAGE="Lalala\nWakawaka"
+
+          for DISCORD_WEBHOOK_URL in "${DISCORD_WEBHOOK_URLS[@]}"; do
+            curl -H "Content-Type: application/json" \
+              -X POST \
+              -d '{
+                "content": "'"$MESSAGE"'"
+              }' \
+              $DISCORD_WEBHOOK_URL
+          done
